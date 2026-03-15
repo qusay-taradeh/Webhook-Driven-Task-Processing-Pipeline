@@ -6,24 +6,14 @@ import {
   ForbiddenError,
   BadRequestError,
 } from "./errors.js";
-
 import {
   NewUser,
   createUser,
   getUserByID,
   getUserByEmail,
   updateUser,
-  upgradeUsertoChirpyRed,
   truncateUsers,
 } from "./lib/db/queries/users.js";
-import {
-  NewChirp,
-  createChirp,
-  getChirpById,
-  getChirps,
-  getChirpsForUser,
-  deleteChirpById,
-} from "./lib/db/queries/chirps.js";
 import {
   getRefreshTokenByToken,
   markRefreshTokenRevoked,
@@ -132,11 +122,12 @@ export async function handlerPostChirps(req: Request, res: Response) {
 
     const cleanedBody = respWords.join(" ");
 
-    const chirp: NewChirp = { body: cleanedBody, userId: userID };
+    // const chirp: NewChirp = { body: cleanedBody, userId: userID };
 
-    const newChirp = await createChirp(chirp);
+    // const newChirp = await createChirp(chirp);
 
-    res.status(201).json(newChirp);
+    // res.status(201).json(newChirp);
+    res.status(201).json({ message: "created" });
   } else {
     throw new BadRequestError("Chirp is too long. Max length is 140");
   }
@@ -174,7 +165,6 @@ export async function handlerCreateUser(req: Request, res: Response) {
       createdAt: newUser.createdAt,
       updatedAt: newUser.updatedAt,
       email: newUser.email,
-      isChirpyRed: newUser.isChirpyRed,
     };
 
     res.status(201).json(returnedObject);
@@ -222,130 +212,11 @@ export async function handlerLogin(req: Request, res: Response) {
       createdAt: foundUser.createdAt,
       updatedAt: foundUser.updatedAt,
       email: foundUser.email,
-      isChirpyRed: foundUser.isChirpyRed,
       token: jwtToken,
       refreshToken: refreshToken.token,
     };
 
     res.status(200).json(returnedObject);
-  }
-}
-
-export async function handlerGetChirps(req: Request, res: Response) {
-  let authorId = "";
-  let authorIdQuery = req.query.authorId;
-  if (typeof authorIdQuery === "string") {
-    authorId = authorIdQuery;
-  }
-
-  let sortBy = "";
-  let sortByQuery = req.query.sort;
-  if (typeof sortByQuery === "string") {
-    sortBy = sortByQuery;
-  }
-
-  if (authorId !== "") {
-    const allChirpsForAuthor = await getChirpsForUser(authorId);
-
-    if (sortBy === "desc") {
-      const sortedDataDesc = allChirpsForAuthor.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-
-      res.status(200).json(sortedDataDesc);
-    } else {
-      const sortedDataAsc = allChirpsForAuthor.sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
-
-      res.status(200).json(sortedDataAsc);
-    }
-  } else {
-    const allChirps = await getChirps();
-
-    if (sortBy === "desc") {
-      const sortedDataDesc = allChirps.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      );
-
-      res.status(200).json(sortedDataDesc);
-    } else {
-      const sortedDataAsc = allChirps.sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-      );
-
-      res.status(200).json(sortedDataAsc);
-    }
-  }
-}
-
-export async function handlerGetChirp(req: Request, res: Response) {
-  const chirpId = req.params.chirpId;
-
-  if (Array.isArray(chirpId)) {
-    const chirp = await getChirpById(chirpId[0]);
-
-    if (!chirp)
-      throw new NotFoundError(
-        `Chirp with ID: ${chirpId} Not Found in the database`,
-      );
-
-    res.status(200).json(chirp);
-  } else {
-    const chirp = await getChirpById(chirpId);
-
-    if (!chirp)
-      throw new NotFoundError(
-        `Chirp with ID: ${chirpId} Not Found in the database`,
-      );
-
-    res.status(200).json(chirp);
-  }
-}
-
-export async function handlerDeleteChirp(req: Request, res: Response) {
-  const chirpId = req.params.chirpId;
-
-  if (Array.isArray(chirpId)) {
-    const chirp = await getChirpById(chirpId[0]);
-
-    if (!chirp)
-      throw new NotFoundError(
-        `Chirp with ID: ${chirpId} Not Found in the database`,
-      );
-
-    const bearerToken = getBearerToken(req);
-
-    const userID = validateJWT(bearerToken, apiConfig.secretKey); // If its not valid it will automatically throws error
-
-    if (chirp.userId !== userID)
-      throw new ForbiddenError("The user is not the owner of the chirp");
-
-    await deleteChirpById(chirp.id, userID);
-
-    res.status(204).send("Chirp Deleted Successfully");
-  } else {
-    const chirp = await getChirpById(chirpId);
-
-    if (!chirp)
-      throw new NotFoundError(
-        `Chirp with ID: ${chirpId} Not Found in the database`,
-      );
-
-    const bearerToken = getBearerToken(req);
-
-    const userID = validateJWT(bearerToken, apiConfig.secretKey); // If its not valid it will automatically throws error
-
-    if (chirp.userId !== userID)
-      throw new ForbiddenError("The user is not the owner of the chirp");
-
-    await deleteChirpById(chirp.id, userID);
-
-    res.status(204).send("Chirp Deleted Successfully");
   }
 }
 
@@ -415,7 +286,6 @@ export async function handlerUpdate(req: Request, res: Response) {
       createdAt: updatedUser.createdAt,
       updatedAt: updatedUser.updatedAt,
       email: updatedUser.email,
-      isChirpyRed: updatedUser.isChirpyRed,
     };
 
     res.status(200).json(returnedObject);
@@ -451,9 +321,9 @@ export async function handlerWebhooks(req: Request, res: Response) {
         "Expected data section and userId subsection to be exist",
       );
 
-    const upgradedUser = await upgradeUsertoChirpyRed(params.data.userId);
+    // const upgradedUser = await upgradeUsertoChirpyRed(params.data.userId);
 
-    if (!upgradedUser) throw new NotFoundError("User Not Found");
+    // if (!upgradedUser) throw new NotFoundError("User Not Found");
 
     res.status(204).json({});
   }

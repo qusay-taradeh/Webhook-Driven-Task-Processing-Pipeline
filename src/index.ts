@@ -11,9 +11,6 @@ import {
   handlerCreateUser,
   handlerLogin,
   handlerPostChirps,
-  handlerGetChirps,
-  handlerGetChirp,
-  handlerDeleteChirp,
   handlerRefresh,
   handlerRevoke,
   handlerUpdate,
@@ -72,30 +69,6 @@ async function main() {
   app.post("/api/chirps", async (req, res, next) => {
     try {
       await handlerPostChirps(req, res);
-    } catch (err) {
-      next(err);
-    }
-  });
-
-  app.get("/api/chirps", async (req, res, next) => {
-    try {
-      await handlerGetChirps(req, res);
-    } catch (err) {
-      next(err);
-    }
-  });
-
-  app.get("/api/chirps/:chirpId", async (req, res, next) => {
-    try {
-      await handlerGetChirp(req, res);
-    } catch (err) {
-      next(err);
-    }
-  });
-
-  app.delete("/api/chirps/:chirpId", async (req, res, next) => {
-    try {
-      await handlerDeleteChirp(req, res);
     } catch (err) {
       next(err);
     }
