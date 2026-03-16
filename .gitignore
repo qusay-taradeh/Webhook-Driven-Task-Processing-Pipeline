@@ -3,4 +3,3 @@ server.log
 /dist
 /src/lib/db/migrations/meta
 .env
-src/post.http

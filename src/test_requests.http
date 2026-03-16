@@ -1,0 +1,44 @@
+### HTTP Client: REST Client for VS Code, test requests
+
+### Delete all users
+POST http://localhost:8080/admin/reset
+
+### Register user
+POST http://localhost:8080/api/users
+Content-Type: application/json
+
+{
+  "email": "walt@breakingbad.com",
+  "password": "123456"
+}
+
+### Login
+POST http://localhost:8080/api/login
+Content-Type: application/json
+
+{
+  "email": "walt@breakingbad.com",
+  "password": "123456"
+}
+
+### Update user
+PUT http://localhost:8080/api/users
+Authorization: Bearer <>
+Content-Type: application/json
+
+{
+  "email": "walt@breakingbad.com",
+  "password": "123456"
+}
+
+### make new JWT, Refresh token provided after Bearer
+POST http://localhost:8080/api/refresh
+Authorization: Bearer <>
+
+### Revoke Refresh token provided after Bearer
+POST http://localhost:8080/api/revoke
+Authorization: Bearer <>
+
+### Create Pipeline 
+POST http://localhost:8080/api/pipelines
+Content-Type: application/json
