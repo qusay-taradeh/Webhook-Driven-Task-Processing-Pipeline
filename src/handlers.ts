@@ -19,6 +19,14 @@ import {
   markRefreshTokenRevoked,
 } from "./lib/db/queries/refreshTokens.js";
 import {
+  NewPipeline,
+  getPipelineBySource,
+  createPipelineWithSubscribers,
+  getUserPipelines,
+} from "./lib/db/queries/pipelines.js";
+import { createJob } from "./lib/db/queries/jobs.js";
+import { enqueueWebhookJob } from "./lib/queue/index.js";
+import {
   hashPassword,
   verifyPassword,
   makeJWT,
@@ -27,21 +35,6 @@ import {
   makeRefreshToken,
   getAPIKey,
 } from "./lib/auth.js";
-
-export function middlewareLogResponses(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  res.on("finish", () => {
-    const statusCode = res.statusCode;
-    if (statusCode !== 200) {
-      console.log(`[NON-OK] ${req.method} ${req.url} - Status: ${statusCode}`);
-    }
-  });
-
-  next();
-}
 
 export function middlewareMetricsInc(
   req: Request,
@@ -81,56 +74,53 @@ export async function handlerReset(req: Request, res: Response) {
 }
 
 export async function handlerPostPipelines(req: Request, res: Response) {
+  const bearerToken = getBearerToken(req);
+  const userID = validateJWT(bearerToken, apiConfig.secretKey);
+
   type parameters = {
-    // focusing on "body" section of the JSON
-    body: string;
+    name: string;
+    actionType: string;
+    targetUrls: string[];
   };
 
   const params: parameters = req.body;
 
-  const bearerToken = getBearerToken(req);
-
-  const userID = validateJWT(bearerToken, apiConfig.secretKey); // If its not valid it will automatically throws error
-
-  if (!params.body) {
-    throw new NotFoundError("Expected body section to be exist");
-  } else if (params.body.length <= 140) {
-    const profaneWords = ["kerfuffle", "sharbert", "fornax"];
-
-    const bodyWords = params.body.split(" "); // Splitting the words based on the single space between them
-
-    const respWords = [];
-
-    for (let index = 0; index < bodyWords.length; index++) {
-      const word = bodyWords[index];
-
-      if (profaneWords.includes(word.toLowerCase())) {
-        // check if the word is profane or not
-        // let asterisks = "";
-
-        // for (let index = 0; index < word.length; index++) {   // prepare asterisks with same length of the profane word
-        //   asterisks += "*";
-        // }
-
-        let asterisks = "****";
-
-        respWords.push(asterisks);
-      } else {
-        respWords.push(word);
-      }
-    }
-
-    const cleanedBody = respWords.join(" ");
-
-    // const chirp: NewChirp = { body: cleanedBody, userId: userID };
-
-    // const newChirp = await createChirp(chirp);
-
-    // res.status(201).json(newChirp);
-    res.status(201).json({ message: "created" });
-  } else {
-    throw new BadRequestError("Chirp is too long. Max length is 140");
+  if (
+    !params.name ||
+    !params.actionType ||
+    !params.targetUrls ||
+    params.targetUrls.length === 0
+  ) {
+    throw new BadRequestError(
+      "Missing required fields or empty subscribers list.",
+    );
   }
+
+  const newPipeline = await createPipelineWithSubscribers(
+    userID,
+    params.name,
+    params.actionType,
+    params.targetUrls,
+  );
+
+  res.status(201).json({
+    message: "Pipeline created successfully",
+    pipeline: newPipeline,
+    webhookUrl: `http://localhost:8080/api/webhooks/${newPipeline.sourceEndpoint}`,
+  });
+}
+
+export async function handlerGetPipelines(req: Request, res: Response) {
+  const bearerToken = getBearerToken(req);
+  const userID = validateJWT(bearerToken, apiConfig.secretKey);
+
+  const userPipelines = await getUserPipelines(userID);
+
+  if (!userPipelines) {
+    throw new NotFoundError("Pipeline not found for this user.");
+  }
+
+  res.status(200).json(userPipelines);
 }
 
 type UserWithoutHashedPassword = Omit<NewUser, "hashedPassword">;
@@ -290,6 +280,41 @@ export async function handlerUpdate(req: Request, res: Response) {
 
     res.status(200).json(returnedObject);
   }
+}
+
+export async function handlerIngestWebhook(req: Request, res: Response) {
+  // Get the dynamic endpoint string from the URL (for example: /api/webhooks/sourceEndpoint)
+  const sourceEndpoint = req.params.sourceEndpoint;
+  const rawPayload = req.body;
+
+  let pipeline: NewPipeline;
+
+  // Find the pipeline associated with this endpoint
+  if (Array.isArray(sourceEndpoint)) {
+    pipeline = await getPipelineBySource(sourceEndpoint[0]);
+  } else {
+    pipeline = await getPipelineBySource(sourceEndpoint);
+  }
+
+  if (!pipeline) {
+    throw new NotFoundError("Pipeline not found for this endpoint.");
+  }
+
+  // Save the initial "pending" job to the database
+  const newJob = await createJob({
+    pipelineId: pipeline.id as string,
+    status: "pending",
+    incomingPayload: rawPayload,
+  });
+
+  // Push the task to the Redis Queue for background processing
+  await enqueueWebhookJob(newJob.id, pipeline.id as string, rawPayload);
+
+  // Respond immediately to the sender
+  res.status(202).json({
+    message: "Webhook received and queued for processing.",
+    jobId: newJob.id,
+  });
 }
 
 export async function handlerWebhooks(req: Request, res: Response) {

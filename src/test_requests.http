@@ -39,6 +39,26 @@ Authorization: Bearer <>
 POST http://localhost:8080/api/revoke
 Authorization: Bearer <>
 
-### Create Pipeline 
+### Create Pipeline for a specified user by providing JWT that's signed with the userID
 POST http://localhost:8080/api/pipelines
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJleHByZXNzX3NlcnZlciIsInN1YiI6IjFiOGI1NWI3LTJjOGYtNDI4ZC1iOGQ3LTg0ZjZhN2Q2YzM4ZiIsImlhdCI6MTc3MzY5NTI2MiwiZXhwIjoxNzczNjk4ODYyfQ.tIx36JzOwjKAdpNL36zmdrfsR7aq_lt8hoHXCr_yLTM
 Content-Type: application/json
+
+{
+    "name": "Cloud Scanner to Discord",
+    "actionType": "DATA_MASKING",
+    "targetUrls": ["https://discord.com/api/webhooks/12345/abcde"]
+}
+
+### List all Pipelines or a specified user by providing JWT that's signed with the userID
+GET http://localhost:8080/api/pipelines
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJleHByZXNzX3NlcnZlciIsInN1YiI6IjFiOGI1NWI3LTJjOGYtNDI4ZC1iOGQ3LTg0ZjZhN2Q2YzM4ZiIsImlhdCI6MTc3MzY5NTI2MiwiZXhwIjoxNzczNjk4ODYyfQ.tIx36JzOwjKAdpNL36zmdrfsR7aq_lt8hoHXCr_yLTM
+
+### enqueue job
+POST http://localhost:8080/api/webhooks/wh_fc6c8ebe0500c139
+Content-Type: application/json
+
+{
+  "topic": "Currency",
+  "event": "Transform Dollars to Euros"
+}

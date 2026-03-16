@@ -33,8 +33,10 @@
   },
   "dependencies": {
     "argon2": "^0.44.0",
+    "bullmq": "^5.71.0",
     "drizzle-orm": "^0.45.1",
     "express": "^5.2.1",
+    "ioredis": "^5.10.0",
     "jsonwebtoken": "^9.0.3",
     "postgres": "^3.4.8",
     "zod": "^4.3.6"

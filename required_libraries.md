@@ -65,3 +65,11 @@ npm i -D vitest
 ######################## fill SECRET and POLKA_KEY variables using openssl as follows in command below
 
 openssl rand -base64 64
+
+########################
+
+npm install bullmq ioredis
+
+######################## Install Docker and run redis for job queue
+
+docker run -d -p 6379:6379 redis

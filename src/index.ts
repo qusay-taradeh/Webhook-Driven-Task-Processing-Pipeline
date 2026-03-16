@@ -5,16 +5,17 @@ import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
 import {
   middlewareMetricsInc,
-  middlewareLogResponses,
   handlerMetrics,
   handlerReset,
   handlerCreateUser,
   handlerLogin,
   handlerPostPipelines,
+  handlerGetPipelines,
   handlerRefresh,
   handlerRevoke,
   handlerUpdate,
   handlerWebhooks,
+  handlerIngestWebhook,
   errorHandler,
 } from "./handlers.js";
 
@@ -33,9 +34,6 @@ async function main() {
   app.get("/app", middlewareMetricsInc);
 
   app.use("/app", express.static("./src/app"));
-
-  // Log after the request finish
-  app.use(middlewareLogResponses);
 
   // To log the /app hits count
   app.get("/admin/metrics", async (req, res, next) => {
@@ -100,6 +98,15 @@ async function main() {
     }
   });
 
+  // To create a job for exist pipline related to sourceEndpoint
+  app.post("/api/webhooks/:sourceEndpoint", async (req, res, next) => {
+    try {
+      await handlerIngestWebhook(req, res);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   // To do smth, when specified event and user ID provided in the request body
   app.post("/api/polka/webhooks", async (req, res, next) => {
     try {
@@ -113,6 +120,15 @@ async function main() {
   app.post("/api/pipelines", async (req, res, next) => {
     try {
       await handlerPostPipelines(req, res);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // To get a user's pipelines
+  app.get("/api/pipelines", async (req, res, next) => {
+    try {
+      await handlerGetPipelines(req, res);
     } catch (err) {
       next(err);
     }
