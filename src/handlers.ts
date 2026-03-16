@@ -68,19 +68,19 @@ export async function handlerMetrics(req: Request, res: Response) {
 }
 
 export async function handlerReset(req: Request, res: Response) {
-  apiConfig.fileserverHits = 0;
-  await truncateUsers();
-
   if (apiConfig.platform !== "dev") {
     // check Platform
     throw new ForbiddenError('Platform should equals "dev"');
   }
 
+  await truncateUsers();
+  apiConfig.fileserverHits = 0;
+
   res.set("Content-Type", "text/plain; charset=utf-8");
   res.send(`All users Deleted`);
 }
 
-export async function handlerPostChirps(req: Request, res: Response) {
+export async function handlerPostPipelines(req: Request, res: Response) {
   type parameters = {
     // focusing on "body" section of the JSON
     body: string;
@@ -200,9 +200,9 @@ export async function handlerLogin(req: Request, res: Response) {
 
     if (!isValid) throw new UnauthorizedError("incorrect email or password");
 
-    const jwtToken = makeJWT(foundUser.id, 3600, apiConfig.secretKey);
+    const jwtToken = makeJWT(foundUser.id, 3600, apiConfig.secretKey); // make JWT (Access Token) that expires after 1 Hour.
 
-    const refreshToken = await makeRefreshToken(foundUser.id);
+    const refreshToken = await makeRefreshToken(foundUser.id); // make Refresh Token that expires after 60 Days.
 
     const returnedObject: UserWithoutHashedPassword & {
       token: string;
@@ -235,28 +235,28 @@ export async function handlerRefresh(req: Request, res: Response) {
   if (foundRefreshToken.revokedAt !== null)
     throw new UnauthorizedError("Refresh Token Revoked");
 
-  const jwtToken = makeJWT(foundRefreshToken.userId, 3600, apiConfig.secretKey);
+  const jwtToken = makeJWT(foundRefreshToken.userId, 3600, apiConfig.secretKey); // make new JWT for an hour.
 
   res.status(200).json({ token: jwtToken });
 }
 
 export async function handlerRevoke(req: Request, res: Response) {
-  const refreshToken = getBearerToken(req);
+  const accessToken = getBearerToken(req);
 
-  const foundRefreshToken = await getRefreshTokenByToken(refreshToken);
+  const foundRefreshToken = await getRefreshTokenByToken(accessToken);
 
   if (!foundRefreshToken)
     throw new UnauthorizedError("Refresh Token Doesn't exist");
 
   await markRefreshTokenRevoked(foundRefreshToken);
 
-  res.status(204).send("Refresh Token Revoked");
+  res.status(204).json({ status: "Refresh Token revoked successfully" });
 }
 
 export async function handlerUpdate(req: Request, res: Response) {
-  const bearerToken = getBearerToken(req);
+  const accessToken = getBearerToken(req);
 
-  const userID = validateJWT(bearerToken, apiConfig.secretKey); // If its not valid it will automatically throws error
+  const userID = validateJWT(accessToken, apiConfig.secretKey); // If its not valid it will automatically throws error
 
   type parameters = {
     // focusing on "email" and "password" sections of the JSON

@@ -45,7 +45,7 @@ export function makeJWT(
   const currentSeconds = Math.floor(Date.now() / 1000); // Current Time in seconds
 
   const payload: Payload = {
-    iss: "chirpy",
+    iss: "express_server",
     sub: userID,
     iat: currentSeconds,
     exp: currentSeconds + expiresIn,
