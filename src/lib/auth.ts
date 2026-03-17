@@ -92,14 +92,3 @@ export async function makeRefreshToken(userID: string) {
 
   return newRefreshToken;
 }
-
-export function getAPIKey(req: Request): string {
-  const authHeader = req.get("Authorization"); // format Authorization: ApiKey THE_KEY_HERE
-  const regex = new RegExp(`ApiKey\\s`, "g");
-
-  if (!authHeader) throw new UnauthorizedError("Authorization Does not Exist");
-
-  const apiKey = authHeader.replace(regex, "");
-
-  return apiKey;
-}

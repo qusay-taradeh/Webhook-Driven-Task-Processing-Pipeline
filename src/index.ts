@@ -3,6 +3,7 @@ import { apiConfig, readConfig } from "./config.js";
 import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
+import "./lib/queue/worker.js";
 import {
   middlewareMetricsInc,
   handlerMetrics,
@@ -14,8 +15,9 @@ import {
   handlerRefresh,
   handlerRevoke,
   handlerUpdate,
-  handlerWebhooks,
   handlerIngestWebhook,
+  handlerGetPipelineJobs,
+  handlerGetJobStatus,
   errorHandler,
 } from "./handlers.js";
 
@@ -107,15 +109,6 @@ async function main() {
     }
   });
 
-  // To do smth, when specified event and user ID provided in the request body
-  app.post("/api/polka/webhooks", async (req, res, next) => {
-    try {
-      await handlerWebhooks(req, res);
-    } catch (err) {
-      next(err);
-    }
-  });
-
   // To create a new pipeline
   app.post("/api/pipelines", async (req, res, next) => {
     try {
@@ -129,6 +122,24 @@ async function main() {
   app.get("/api/pipelines", async (req, res, next) => {
     try {
       await handlerGetPipelines(req, res);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get history of all jobs for a pipeline
+  app.get("/api/pipelines/:pipelineId/jobs", async (req, res, next) => {
+    try {
+      await handlerGetPipelineJobs(req, res);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Get exact status and delivery attempts of a specific job
+  app.get("/api/jobs/:jobId", async (req, res, next) => {
+    try {
+      await handlerGetJobStatus(req, res);
     } catch (err) {
       next(err);
     }

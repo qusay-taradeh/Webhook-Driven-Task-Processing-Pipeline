@@ -1,9 +1,13 @@
-### HTTP Client: REST Client for VS Code, test requests
+### HTTP Client: REST Client for VS Code
 
-### Delete all users
+# -------------------------------------------------------
+# ADMIN & AUTHENTICATION
+# -------------------------------------------------------
+
+### Delete all users (Admin)
 POST http://localhost:8080/admin/reset
 
-### Register user
+### Register a new user
 POST http://localhost:8080/api/users
 Content-Type: application/json
 
@@ -12,7 +16,8 @@ Content-Type: application/json
   "password": "123456"
 }
 
-### Login
+### Login (This request is named 'login' to capture tokens)
+# @name login
 POST http://localhost:8080/api/login
 Content-Type: application/json
 
@@ -21,44 +26,154 @@ Content-Type: application/json
   "password": "123456"
 }
 
-### Update user
+# Extract the tokens from the login response into variables like {{login.response.body.token}}
+
+# -------------------------------------------------------
+# USER MANAGEMENT (Requires Access Token)
+# -------------------------------------------------------
+
+### Update user credentials (Requires Access Token)
 PUT http://localhost:8080/api/users
-Authorization: Bearer <>
+Authorization: Bearer {{login.response.body.token}}
 Content-Type: application/json
 
 {
-  "email": "walt@breakingbad.com",
-  "password": "123456"
+  "email": "heisenberg@breakingbad.com",
+  "password": "newpassword123"
 }
 
-### make new JWT, Refresh token provided after Bearer
+# -------------------------------------------------------
+# TOKEN MANAGEMENT (Requires Refresh Token)
+# -------------------------------------------------------
+
+### Generate a new Access Token (Requires Refresh Token)
 POST http://localhost:8080/api/refresh
-Authorization: Bearer <>
+Authorization: Bearer {{login.response.body.refreshToken}}
 
-### Revoke Refresh token provided after Bearer
+### Revoke the Refresh Token / Logout (Requires Refresh Token)
 POST http://localhost:8080/api/revoke
-Authorization: Bearer <>
+Authorization: Bearer {{login.response.body.refreshToken}}
 
-### Create Pipeline for a specified user by providing JWT that's signed with the userID
+# -------------------------------------------------------
+# PIPELINE MANAGEMENT (Requires Access Token)
+# -------------------------------------------------------
+
+### Create a new Pipeline with DATA_MASKING (TEST ACTION 1: DATA_MASKING) 
+### go to webhook.site and copy your URL and replace the current targetUrls with it
+# @name createMaskingPipeline
 POST http://localhost:8080/api/pipelines
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJleHByZXNzX3NlcnZlciIsInN1YiI6IjFiOGI1NWI3LTJjOGYtNDI4ZC1iOGQ3LTg0ZjZhN2Q2YzM4ZiIsImlhdCI6MTc3MzY5NTI2MiwiZXhwIjoxNzczNjk4ODYyfQ.tIx36JzOwjKAdpNL36zmdrfsR7aq_lt8hoHXCr_yLTM
+Authorization: Bearer {{login.response.body.token}}
 Content-Type: application/json
 
 {
-    "name": "Cloud Scanner to Discord",
+    "name": "Secure User Forwarder",
     "actionType": "DATA_MASKING",
-    "targetUrls": ["https://discord.com/api/webhooks/12345/abcde"]
+    "targetUrls": [
+        "https://webhook.site/ee44eb1f-81fc-423b-9377-ec1a845a815b" 
+    ]
 }
 
-### List all Pipelines or a specified user by providing JWT that's signed with the userID
-GET http://localhost:8080/api/pipelines
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJleHByZXNzX3NlcnZlciIsInN1YiI6IjFiOGI1NWI3LTJjOGYtNDI4ZC1iOGQ3LTg0ZjZhN2Q2YzM4ZiIsImlhdCI6MTc3MzY5NTI2MiwiZXhwIjoxNzczNjk4ODYyfQ.tIx36JzOwjKAdpNL36zmdrfsR7aq_lt8hoHXCr_yLTM
+# Extract the newly generated webhook endpoint string as {{createMaskingPipeline.response.body.pipeline.sourceEndpoint}}
 
-### enqueue job
-POST http://localhost:8080/api/webhooks/wh_fc6c8ebe0500c139
+# -------------------------------------------------------
+# FIRE THE TRIGGER (No Token Required - Uses Unique URL)
+# -------------------------------------------------------
+
+### Trigger the Webhook (Simulating a 3rd party sending you data)
+POST http://localhost:8080/api/webhooks/{{createMaskingPipeline.response.body.pipeline.sourceEndpoint}}
 Content-Type: application/json
 
 {
-  "topic": "Currency",
-  "event": "Transform Dollars to Euros"
+  "event": "user_signup",
+  "userId": "998877",
+  "email": "topsecret@gmail.com",
+  "password": "mySuperSecretPassword!",
+  "public_profile": {
+    "username": "cool_tester",
+    "theme": "dark"
+  }
 }
+
+# -------------------------------------------------------
+# TEST ACTION 2: ADD_METADATA
+# -------------------------------------------------------
+
+### Create a new Pipeline with ADD_METADATA
+# @name createMetaPipeline
+POST http://localhost:8080/api/pipelines
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+    "name": "Metadata Injector",
+    "actionType": "ADD_METADATA",
+    "targetUrls": [
+        "https://webhook.site/ee44eb1f-81fc-423b-9377-ec1a845a815b" 
+    ]
+}
+
+# Extract the newly generated webhook endpoint string as {{createMetaPipeline.response.body.pipeline.sourceEndpoint}}
+
+### Trigger the Metadata Webhook
+# @name triggerMeta
+POST http://localhost:8080/api/webhooks/{{createMetaPipeline.response.body.pipeline.sourceEndpoint}}
+Content-Type: application/json
+
+{
+  "orderId": "ORD-12345",
+  "status": "shipped"
+}
+
+# -------------------------------------------------------
+# TEST ACTION 3: FLATTEN_PAYLOAD
+# -------------------------------------------------------
+
+### Create a new Pipeline with FLATTEN_PAYLOAD
+# @name createFlattenPipeline
+POST http://localhost:8080/api/pipelines
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+    "name": "Payload Flattener",
+    "actionType": "FLATTEN_PAYLOAD",
+    "targetUrls": [
+        "https://webhook.site/ee44eb1f-81fc-423b-9377-ec1a845a815b" 
+    ]
+}
+
+# Extract the newly generated webhook endpoint string as {{createFlattenPipeline.response.body.pipeline.sourceEndpoint}}
+# Extract the pipeline id as {{createFlattenPipeline.response.body.pipeline.id}}
+
+### Trigger the Flatten Webhook (Notice the deeply nested "data" object)
+# @name triggerFlatten
+POST http://localhost:8080/api/webhooks/{{createFlattenPipeline.response.body.pipeline.sourceEndpoint}}
+Content-Type: application/json
+
+{
+  "wrapper_id": "sys_99",
+  "data": {
+    "real_user_id": "user_42",
+    "email": "user@example.com",
+    "preferences": "all"
+  }
+}
+
+# Extract the job ID that was queued so we can check its status as {{triggerFlatten.response.body.jobId}}
+
+### List all Pipelines for the logged-in user (Requires Access Token)
+GET http://localhost:8080/api/pipelines
+Authorization: Bearer {{login.response.body.token}}
+
+# !!!!!!!! To check the failure of the job try write invalid targetUrls !!!!!!!!
+# -------------------------------------------------------
+# TEST THE JOB STATUS API
+# -------------------------------------------------------
+
+### Get Job History for the Flatten Pipeline
+GET http://localhost:8080/api/pipelines/{{createFlattenPipeline.response.body.pipeline.id}}/jobs
+Authorization: Bearer {{login.response.body.token}}
+
+### Get exact details/status for the specific Flatten Job
+GET http://localhost:8080/api/jobs/{{triggerFlatten.response.body.jobId}}
+Authorization: Bearer {{login.response.body.token}}

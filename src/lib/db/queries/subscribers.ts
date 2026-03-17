@@ -20,3 +20,12 @@ export async function getSubscriberByID(subscriberID: string) {
     .where(eq(subscribers.id, subscriberID));
   return result;
 }
+
+// Fetch all subscribers for a specific pipeline
+export async function getSubscribersByPipelineID(pipelineID: string) {
+  const result = await db
+    .select()
+    .from(subscribers)
+    .where(eq(subscribers.pipelineId, pipelineID));
+  return result;
+}

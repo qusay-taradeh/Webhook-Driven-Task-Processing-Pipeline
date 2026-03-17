@@ -16,21 +16,17 @@ type APIConfig = {
   migrationConfig: MigrationConfig;
   platform: string;
   secretKey: string;
-  polkaKey: string;
 };
 
 const platformEnv = process.env.PLATFORM as string;
 
 const secretKeyEnv = process.env.SECRET as string;
 
-const polkaKeyEnv = process.env.POLKA_KEY as string;
-
 export const apiConfig: APIConfig = {
   fileserverHits: 0,
   migrationConfig: migrationConfig,
   platform: platformEnv,
   secretKey: secretKeyEnv,
-  polkaKey: polkaKeyEnv,
 };
 
 const ConfigSchema = z.object({

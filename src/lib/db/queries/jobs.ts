@@ -1,6 +1,6 @@
 import { db } from "../index.js";
 import { jobs } from "../schema.js";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export type NewJob = typeof jobs.$inferInsert;
 
@@ -33,5 +33,15 @@ export async function updateJob(
     .set({ ...updates })
     .where(eq(jobs.id, jobID))
     .returning();
+  return result;
+}
+
+//to fetch all jobs for a specific pipeline (Job History) Most recent first
+export async function getJobsByPipelineID(pipelineID: string) {
+  const result = await db
+    .select()
+    .from(jobs)
+    .where(eq(jobs.pipelineId, pipelineID))
+    .orderBy(desc(jobs.createdAt));
   return result;
 }

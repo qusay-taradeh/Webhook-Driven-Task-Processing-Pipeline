@@ -20,11 +20,17 @@ import {
 } from "./lib/db/queries/refreshTokens.js";
 import {
   NewPipeline,
+  getPipelineByID,
   getPipelineBySource,
   createPipelineWithSubscribers,
   getUserPipelines,
 } from "./lib/db/queries/pipelines.js";
-import { createJob } from "./lib/db/queries/jobs.js";
+import {
+  createJob,
+  getJobByID,
+  getJobsByPipelineID,
+  NewJob,
+} from "./lib/db/queries/jobs.js";
 import { enqueueWebhookJob } from "./lib/queue/index.js";
 import {
   hashPassword,
@@ -33,7 +39,6 @@ import {
   validateJWT,
   getBearerToken,
   makeRefreshToken,
-  getAPIKey,
 } from "./lib/auth.js";
 
 export function middlewareMetricsInc(
@@ -231,9 +236,9 @@ export async function handlerRefresh(req: Request, res: Response) {
 }
 
 export async function handlerRevoke(req: Request, res: Response) {
-  const accessToken = getBearerToken(req);
+  const refreshToken = getBearerToken(req);
 
-  const foundRefreshToken = await getRefreshTokenByToken(accessToken);
+  const foundRefreshToken = await getRefreshTokenByToken(refreshToken);
 
   if (!foundRefreshToken)
     throw new UnauthorizedError("Refresh Token Doesn't exist");
@@ -317,41 +322,66 @@ export async function handlerIngestWebhook(req: Request, res: Response) {
   });
 }
 
-export async function handlerWebhooks(req: Request, res: Response) {
-  type parameters = {
-    // focusing on "event" and "data" sections of the JSON
-    event: string;
-    data: {
-      userId: string;
-    };
-  };
+export async function handlerGetPipelineJobs(req: Request, res: Response) {
+  const bearerToken = getBearerToken(req);
+  const userID = validateJWT(bearerToken, apiConfig.secretKey);
+  const pipelineId = req.params.pipelineId;
 
-  const params: parameters = req.body;
+  let pipeline: NewPipeline;
 
-  const receivedApiKey = getAPIKey(req);
-
-  if (receivedApiKey !== apiConfig.polkaKey)
-    throw new UnauthorizedError("Invalid API Key");
-
-  if (!params.event)
-    throw new NotFoundError("Expected event section to be exist");
-
-  if (params.event !== "user.upgraded")
-    res.status(204).send("The event isn't upgrade type");
-  else {
-    // event = user.upgraded
-
-    if (!params.data.userId)
-      throw new NotFoundError(
-        "Expected data section and userId subsection to be exist",
-      );
-
-    // const upgradedUser = await upgradeUsertoChirpyRed(params.data.userId);
-
-    // if (!upgradedUser) throw new NotFoundError("User Not Found");
-
-    res.status(204).json({});
+  // Security Check: Verify the pipeline exists and the user owns it
+  if (Array.isArray(pipelineId)) {
+    pipeline = await getPipelineByID(pipelineId[0]);
+  } else {
+    pipeline = await getPipelineByID(pipelineId);
   }
+
+  if (!pipeline) throw new NotFoundError("Pipeline not found");
+  if (pipeline.userId !== userID)
+    throw new ForbiddenError("You do not have access to this pipeline");
+
+  let jobHistory: NewJob[];
+
+  if (Array.isArray(pipelineId)) {
+    jobHistory = await getJobsByPipelineID(pipelineId[0]);
+  } else {
+    jobHistory = await getJobsByPipelineID(pipelineId);
+  }
+
+  res.status(200).json(jobHistory);
+}
+
+export async function handlerGetJobStatus(req: Request, res: Response) {
+  const bearerToken = getBearerToken(req);
+  const userID = validateJWT(bearerToken, apiConfig.secretKey);
+  const jobId = req.params.jobId;
+
+  let job: NewJob;
+
+  // Fetch the specific job
+  if (Array.isArray(jobId)) {
+    job = await getJobByID(jobId[0]);
+  } else {
+    job = await getJobByID(jobId);
+  }
+
+  if (!job) throw new NotFoundError("Job not found");
+
+  // Security Check: Verify the user owns the pipeline this job belongs to
+  const pipeline = await getPipelineByID(job.pipelineId);
+  if (pipeline.userId !== userID)
+    throw new ForbiddenError("You do not have access to this job");
+
+  res.status(200).json({
+    id: job.id,
+    status: job.status,
+    attempts: job.attempts,
+    errorLog: job.errorLog,
+    createdAt: job.createdAt,
+    updatedAt: job.updatedAt,
+    incomingPayload: job.incomingPayload,
+    processedResult: job.processedResult,
+  });
 }
 
 export function errorHandler(

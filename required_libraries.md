@@ -60,9 +60,8 @@ npm i -D vitest
 
 #for .env file it should contains 
 ######################## PLATFORM="dev"
-######################## POLKA_KEY =""
 ######################## SECRET =""
-######################## fill SECRET and POLKA_KEY variables using openssl as follows in command below
+######################## fill SECRET variable using openssl as follows in command below
 
 openssl rand -base64 64
 
