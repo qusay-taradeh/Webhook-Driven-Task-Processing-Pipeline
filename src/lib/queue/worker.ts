@@ -60,7 +60,7 @@ function processData(actionType: string, payload: any) {
       }
       break;
 
-    case "SUMMARIZE_PAYLOAD":
+    case "SUMMARIZE_PAYLOAD": {
       // Action 6: Throws away the heavy payload and forwards a lightweight summary
       const keyCount = Object.keys(processed).length;
       processed = {
@@ -69,6 +69,7 @@ function processData(actionType: string, payload: any) {
         _received_at: new Date().toISOString(),
       };
       break;
+    }
 
     default:
       // If action type is unknown, just pass the data through unchanged

@@ -384,12 +384,7 @@ export async function handlerGetJobStatus(req: Request, res: Response) {
   });
 }
 
-export function errorHandler(
-  err: Error,
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
+export function errorHandler(err: Error, req: Request, res: Response) {
   console.log(err.message);
 
   if (err instanceof BadRequestError) {

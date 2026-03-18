@@ -36,6 +36,16 @@ describe("Password Hashing and JWT", () => {
     expect(result).toBe(false);
   });
 
+  it("should return true for the correct password", async () => {
+    const result = await verifyPassword(hash2, password2);
+    expect(result).toBe(true);
+  });
+
+  it("should return false for the incorrect password", async () => {
+    const result = await verifyPassword(hash2, password1);
+    expect(result).toBe(false);
+  });
+
   // Correct secret -> returns userID
   it("should return userID1 for a valid token verified with correct secret", () => {
     const result = validateJWT(jwtToken1, secret1);

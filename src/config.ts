@@ -4,7 +4,7 @@ import { loadEnvFile } from "process";
 // Wrap in try/catch so Docker doesn't crash when .env is missing
 try {
   loadEnvFile();
-} catch (err) {
+} catch {
   console.log(
     "No .env file found. Relying on system environment variables (Docker mode).",
   );

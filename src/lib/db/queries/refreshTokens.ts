@@ -1,6 +1,6 @@
 import { db } from "../index.js";
-import { refreshTokens, users } from "../schema.js";
-import { asc, eq } from "drizzle-orm";
+import { refreshTokens } from "../schema.js";
+import { eq } from "drizzle-orm";
 
 export type NewRefreshToken = typeof refreshTokens.$inferInsert;
 
