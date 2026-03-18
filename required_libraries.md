@@ -58,7 +58,13 @@ npm i -D vitest
 
 ########################
 
-#for .env file it should contains 
+npm install -D prettier eslint typescript-eslint @vitest/coverage-v8
+
+npm install -D globals eslint-plugin-security
+
+########################
+
+#for .env file it should contains
 ######################## PLATFORM="dev"
 ######################## SECRET =""
 ######################## fill SECRET variable using openssl as follows in command below
