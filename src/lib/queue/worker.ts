@@ -36,8 +36,13 @@ function processData(actionType: string, payload: any) {
     case "REMOVE_NULLS":
       // Action 4: Iterates through root keys and deletes any that are null or undefined
       for (const key in processed) {
-        if (processed[key] === null || processed[key] === undefined) {
-          delete processed[key];
+        if (Object.hasOwn(processed, key)) {
+          // Tell ESLint to ignore the injection warning here because we just proved it's safe
+          // eslint-disable-next-line security/detect-object-injection
+          if (processed[key] === null || processed[key] === undefined) {
+            // eslint-disable-next-line security/detect-object-injection
+            delete processed[key];
+          }
         }
       }
       break;
