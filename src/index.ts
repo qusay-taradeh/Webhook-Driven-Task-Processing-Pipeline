@@ -33,9 +33,9 @@ async function main() {
   app.use(express.json());
 
   // To record the number of hits
-  app.get("/app", middlewareMetricsInc);
+  app.get("/", middlewareMetricsInc);
 
-  app.use("/app", express.static("./src/app"));
+  app.use("/", express.static("./src/app"));
 
   // To log the /app hits count
   app.get("/admin/metrics", async (req, res, next) => {
