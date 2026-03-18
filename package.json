@@ -27,6 +27,7 @@
   },
   "homepage": "https://github.com/qusay-taradeh/Webhook-Driven-Task-Processing-Pipeline#readme",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.5.0",

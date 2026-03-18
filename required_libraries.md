@@ -60,6 +60,8 @@ npm i -D vitest
 
 npm install -D prettier eslint typescript-eslint @vitest/coverage-v8
 
+npm install -D @eslint/js
+
 npm install -D globals eslint-plugin-security
 
 ########################
