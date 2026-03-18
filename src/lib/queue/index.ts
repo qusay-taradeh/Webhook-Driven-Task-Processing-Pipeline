@@ -1,11 +1,11 @@
 import { Queue } from "bullmq";
-import IORedis from "ioredis";
+import { Redis } from "ioredis";
 
 // Fetch the URL from Docker environment, fallback to localhost for local testing
 const redisUrl = process.env.REDIS_URL || "redis://localhost:6379";
 
 // Connect to Redis
-export const redisConnection = new IORedis(redisUrl, {
+export const redisConnection = new Redis(redisUrl, {
   maxRetriesPerRequest: null,
 }) as any;
 
