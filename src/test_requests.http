@@ -58,7 +58,11 @@ Authorization: Bearer {{login.response.body.refreshToken}}
 # PIPELINE MANAGEMENT (Requires Access Token)
 # -------------------------------------------------------
 
-### Create a new Pipeline with DATA_MASKING (TEST ACTION 1: DATA_MASKING) 
+# -------------------------------------------------------
+# TEST ACTION 1: DATA_MASKING
+# -------------------------------------------------------
+
+### Create a new Pipeline with DATA_MASKING
 ### go to webhook.site and copy your URL and replace the current targetUrls with it
 # @name createMaskingPipeline
 POST http://localhost:8080/api/pipelines
@@ -160,6 +164,100 @@ Content-Type: application/json
 }
 
 # Extract the job ID that was queued so we can check its status as {{triggerFlatten.response.body.jobId}}
+
+# -------------------------------------------------------
+# TEST ACTION 4: REMOVE_NULLS
+# -------------------------------------------------------
+
+### Create pipeline
+# @name createNullsPipeline
+POST http://localhost:8080/api/pipelines
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+    "name": "Data Cleaner",
+    "actionType": "REMOVE_NULLS",
+    "targetUrls": [
+        "https://webhook.site/ee44eb1f-81fc-423b-9377-ec1a845a815b" 
+    ]
+}
+
+# Extract the newly generated webhook endpoint string as {{createNullsPipeline.response.body.pipeline.sourceEndpoint}}
+
+### Trigger Webhook (Notice the null values)
+POST http://localhost:8080/api/webhooks/{{createNullsPipeline.response.body.pipeline.sourceEndpoint}}
+Content-Type: application/json
+
+{
+  "event": "profile_update",
+  "username": "coder_guy",
+  "bio": null,
+  "website": null,
+  "theme": "light"
+}
+
+# -------------------------------------------------------
+# TEST ACTION 5: HASH_IDENTIFIERS
+# -------------------------------------------------------
+
+### Create pipeline
+# @name createHashPipeline
+POST http://localhost:8080/api/pipelines
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+    "name": "Privacy Forwarder",
+    "actionType": "HASH_IDENTIFIERS",
+    "targetUrls": [
+        "https://webhook.site/ee44eb1f-81fc-423b-9377-ec1a845a815b" 
+    ]
+}
+
+# Extract the newly generated webhook endpoint string as {{createHashPipeline.response.body.pipeline.sourceEndpoint}}
+
+### Trigger Webhook
+POST http://localhost:8080/api/webhooks/{{createHashPipeline.response.body.pipeline.sourceEndpoint}}
+Content-Type: application/json
+
+{
+  "event": "page_view",
+  "userId": "998877",
+  "email": "analytics_user@gmail.com",
+  "page": "/pricing"
+}
+
+# -------------------------------------------------------
+# TEST ACTION 6: SUMMARIZE_PAYLOAD
+# -------------------------------------------------------
+
+### Create pipeline
+# @name createSummaryPipeline
+POST http://localhost:8080/api/pipelines
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+    "name": "Payload Reducer",
+    "actionType": "SUMMARIZE_PAYLOAD",
+    "targetUrls": [
+        "https://webhook.site/ee44eb1f-81fc-423b-9377-ec1a845a815b" 
+    ]
+}
+
+# Extract the newly generated webhook endpoint string as {{createSummaryPipeline.response.body.pipeline.sourceEndpoint}}
+
+### Trigger Webhook (Imagine this payload has 50 more keys)
+POST http://localhost:8080/api/webhooks/{{createSummaryPipeline.response.body.pipeline.sourceEndpoint}}
+Content-Type: application/json
+
+{
+  "event": "massive_database_export",
+  "data_chunk_1": "...",
+  "data_chunk_2": "...",
+  "data_chunk_3": "..."
+}
 
 ### List all Pipelines for the logged-in user (Requires Access Token)
 GET http://localhost:8080/api/pipelines

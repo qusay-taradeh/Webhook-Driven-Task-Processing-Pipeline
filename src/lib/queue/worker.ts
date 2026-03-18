@@ -3,8 +3,9 @@ import { redisConnection } from "./index.js";
 import { updateJob } from "../db/queries/jobs.js";
 import { getPipelineByID } from "../db/queries/pipelines.js";
 import { getSubscribersByPipelineID } from "../db/queries/subscribers.js";
+import crypto from "crypto";
 
-// THE 3 PROCESSING ACTIONS
+// THE 6 PROCESSING ACTIONS
 function processData(actionType: string, payload: any) {
   let processed = { ...payload };
 
@@ -30,6 +31,43 @@ function processData(actionType: string, payload: any) {
         processed = { ...processed, ...processed.data };
         delete processed.data;
       }
+      break;
+
+    case "REMOVE_NULLS":
+      // Action 4: Iterates through root keys and deletes any that are null or undefined
+      for (const key in processed) {
+        if (processed[key] === null || processed[key] === undefined) {
+          delete processed[key];
+        }
+      }
+      break;
+
+    case "HASH_IDENTIFIERS":
+      // Action 5: Replaces email and userId with secure one-way hashes
+      if (processed.email) {
+        processed.email_hash = crypto
+          .createHash("sha256")
+          .update(processed.email)
+          .digest("hex");
+        delete processed.email;
+      }
+      if (processed.userId) {
+        processed.userId_hash = crypto
+          .createHash("sha256")
+          .update(String(processed.userId))
+          .digest("hex");
+        delete processed.userId;
+      }
+      break;
+
+    case "SUMMARIZE_PAYLOAD":
+      // Action 6: Throws away the heavy payload and forwards a lightweight summary
+      const keyCount = Object.keys(processed).length;
+      processed = {
+        _summary: `Payload reduced. Originally contained ${keyCount} root keys.`,
+        _original_event: processed.event || "unknown_event",
+        _received_at: new Date().toISOString(),
+      };
       break;
 
     default:

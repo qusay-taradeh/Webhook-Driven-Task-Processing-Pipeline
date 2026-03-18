@@ -1,0 +1,53 @@
+services:
+  # 1. The PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: webhook_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: webhook
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d webhook"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. The Redis Queue
+  redis:
+    image: redis:7-alpine
+    container_name: webhook_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 3. The Node.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: webhook_app
+    ports:
+      - "8080:8080"
+    environment:
+      # Inject the connection strings so the app can talk to the other containers
+      - REDIS_URL=redis://redis:6379
+      - PLATFORM={PLATFORM}
+      - SECRET=${SECRET}
+      - DATABASE_URL=postgres://postgres:${DB_PASSWORD}@postgres:5432/webhook?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pg_data:

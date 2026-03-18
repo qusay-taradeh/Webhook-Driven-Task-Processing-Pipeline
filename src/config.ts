@@ -1,11 +1,14 @@
-import fs from "fs";
-import os from "os";
-import path from "path";
-import { z } from "zod";
 import type { MigrationConfig } from "drizzle-orm/migrator";
 import { loadEnvFile } from "process";
 
-loadEnvFile();
+// Wrap in try/catch so Docker doesn't crash when .env is missing
+try {
+  loadEnvFile();
+} catch (err) {
+  console.log(
+    "No .env file found. Relying on system environment variables (Docker mode).",
+  );
+}
 
 const migrationConfig: MigrationConfig = {
   migrationsFolder: "./src/lib/db/migrations",
@@ -16,79 +19,17 @@ type APIConfig = {
   migrationConfig: MigrationConfig;
   platform: string;
   secretKey: string;
+  dbURL: string;
 };
 
-const platformEnv = process.env.PLATFORM as string;
-
-const secretKeyEnv = process.env.SECRET as string;
+const dbURLEnv = process.env.DATABASE_URL || "";
+const platformEnv = process.env.PLATFORM || "dev";
+const secretKeyEnv = process.env.SECRET || "";
 
 export const apiConfig: APIConfig = {
   fileserverHits: 0,
   migrationConfig: migrationConfig,
   platform: platformEnv,
   secretKey: secretKeyEnv,
+  dbURL: dbURLEnv,
 };
-
-const ConfigSchema = z.object({
-  dbUrl: z.string(),
-  currentUserName: z.string(),
-});
-
-export type Config = z.infer<typeof ConfigSchema>;
-
-export function setUser(name: string) {
-  const config = readConfig();
-
-  config.currentUserName = name;
-
-  writeConfig(config);
-
-  console.log(
-    `Config File Updated, Current User Name successfully has been set to ${name}`,
-  );
-}
-
-export function readConfig(): Config {
-  const filePath = getConfigFilePath();
-
-  try {
-    const jsonString = fs.readFileSync(filePath, "utf8");
-
-    if (jsonString !== "") {
-      const validatedConfig = validateConfig(jsonString);
-      return validatedConfig;
-    }
-  } catch (err) {
-    console.error("Error reading file:", err);
-  }
-
-  return { dbUrl: "", currentUserName: "" };
-}
-
-function getConfigFilePath(): string {
-  const homeDir = os.homedir();
-  const fullPath = path.join(homeDir, ".webhookconfig.json");
-  return fullPath;
-}
-
-function writeConfig(cfg: Config): void {
-  const jsonObject = JSON.stringify(cfg);
-  const filePath = getConfigFilePath();
-
-  try {
-    fs.writeFileSync(filePath, jsonObject, "utf8");
-    console.log("File written successfully.");
-  } catch (err) {
-    console.error("Error writing file:", err);
-  }
-}
-
-function validateConfig(rawConfig: any): Config {
-  try {
-    const config: Config = ConfigSchema.parse(JSON.parse(rawConfig));
-    return config;
-  } catch (error) {
-    console.error("Validation failed:", error);
-    return { dbUrl: "", currentUserName: "" };
-  }
-}

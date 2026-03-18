@@ -1,5 +1,5 @@
 import express from "express";
-import { apiConfig, readConfig } from "./config.js";
+import { apiConfig } from "./config.js";
 import postgres from "postgres";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -23,7 +23,7 @@ import {
 
 async function main() {
   // to keep the database up-to-date whenever the server start
-  const migrationClient = postgres(readConfig().dbUrl, { max: 1 });
+  const migrationClient = postgres(apiConfig.dbURL, { max: 1 });
   await migrate(drizzle(migrationClient), apiConfig.migrationConfig);
 
   const app = express();
