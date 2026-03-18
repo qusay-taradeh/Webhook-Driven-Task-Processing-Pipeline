@@ -78,3 +78,5 @@ npm install bullmq ioredis
 ######################## Install Docker and run redis for job queue
 
 docker run -d -p 6379:6379 redis
+
+########################
