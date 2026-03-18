@@ -47,12 +47,5 @@
     "jsonwebtoken": "^9.0.3",
     "postgres": "^3.4.8",
     "zod": "^4.3.6"
-  },
-  "prettier": {
-    "printWidth": 80,
-    "useTabs": false,
-    "tabWidth": 2,
-    "semi": true,
-    "singleQuote": false
   }
 }
