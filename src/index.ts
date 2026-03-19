@@ -27,7 +27,9 @@ async function main() {
   await migrate(drizzle(migrationClient), apiConfig.migrationConfig);
 
   const app = express();
-  const PORT = 8080;
+
+  // for GCP
+  const PORT = Number(process.env.PORT) || 8080;
 
   // To send JSON responses
   app.use(express.json());
@@ -148,8 +150,8 @@ async function main() {
   // To use the overall errors handler when an error occurs
   app.use(errorHandler);
 
-  app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server is running on port ${PORT}`);
   });
 }
 
