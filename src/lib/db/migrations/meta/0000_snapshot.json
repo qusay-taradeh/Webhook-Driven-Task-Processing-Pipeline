@@ -75,12 +75,8 @@
           "name": "jobs_pipeline_id_pipelines_id_fk",
           "tableFrom": "jobs",
           "tableTo": "pipelines",
-          "columnsFrom": [
-            "pipeline_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pipeline_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -147,12 +143,8 @@
           "name": "pipelines_user_id_users_id_fk",
           "tableFrom": "pipelines",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -162,9 +154,7 @@
         "pipelines_source_endpoint_unique": {
           "name": "pipelines_source_endpoint_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "source_endpoint"
-          ]
+          "columns": ["source_endpoint"]
         }
       },
       "policies": {},
@@ -220,12 +210,8 @@
           "name": "refresh_tokens_user_id_users_id_fk",
           "tableFrom": "refresh_tokens",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -280,12 +266,8 @@
           "name": "subscribers_pipeline_id_pipelines_id_fk",
           "tableFrom": "subscribers",
           "tableTo": "pipelines",
-          "columnsFrom": [
-            "pipeline_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["pipeline_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -341,9 +323,7 @@
         "users_email_unique": {
           "name": "users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -355,13 +335,7 @@
     "public.job_status": {
       "name": "job_status",
       "schema": "public",
-      "values": [
-        "pending",
-        "processing",
-        "completed",
-        "failed",
-        "retrying"
-      ]
+      "values": ["pending", "processing", "completed", "failed", "retrying"]
     }
   },
   "schemas": {},
