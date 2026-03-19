@@ -1,5 +1,4 @@
 /node_modules
 server.log
 /dist
-/src/lib/db/migrations/meta
 .env
