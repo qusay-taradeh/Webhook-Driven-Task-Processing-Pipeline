@@ -13,7 +13,7 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SECRET: ${{ secrets.SECRET }}
       PLATFORM: ${{ secrets.PLATFORM }}
-      
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
