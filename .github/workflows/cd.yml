@@ -28,6 +28,3 @@ jobs:
 
       - name: Build the app
         run: npm run build
-
-      - name: Run the Migrations
-        run: npm run migrate
