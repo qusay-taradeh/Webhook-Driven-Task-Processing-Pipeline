@@ -13,6 +13,7 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       SECRET: ${{ secrets.SECRET }}
       PLATFORM: ${{ secrets.PLATFORM }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
 
     steps:
       - name: Check out code
