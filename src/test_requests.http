@@ -275,3 +275,70 @@ Authorization: Bearer {{login.response.body.token}}
 ### Get exact details/status for the specific Flatten Job
 GET http://localhost:8080/api/jobs/{{triggerFlatten.response.body.jobId}}
 Authorization: Bearer {{login.response.body.token}}
+
+###################################################### TEST DEPLOYED APPLICATION ######################################################
+
+### Register a new user
+POST https://webhook-app-296082681940.us-central1.run.app/api/users
+Content-Type: application/json
+
+{
+  "email": "walt@breakingbad.com",
+  "password": "123456"
+}
+
+### Login (This request is named 'login' to capture tokens)
+# @name login
+POST https://webhook-app-296082681940.us-central1.run.app/api/login
+Content-Type: application/json
+
+{
+  "email": "walt@breakingbad.com",
+  "password": "123456"
+}
+
+# Extract the tokens from the login response into variables like {{login.response.body.token}}
+
+# -------------------------------------------------------
+# PIPELINE MANAGEMENT (Requires Access Token)
+# -------------------------------------------------------
+
+# -------------------------------------------------------
+# TEST ACTION 1: DATA_MASKING
+# -------------------------------------------------------
+
+### Create a new Pipeline with DATA_MASKING
+### go to webhook.site and copy your URL and replace the current targetUrls with it
+# @name createMaskingPipeline
+POST https://webhook-app-296082681940.us-central1.run.app/api/pipelines
+Authorization: Bearer {{login.response.body.token}}
+Content-Type: application/json
+
+{
+    "name": "Secure User Forwarder",
+    "actionType": "DATA_MASKING",
+    "targetUrls": [
+        "https://webhook.site/ee44eb1f-81fc-423b-9377-ec1a845a815b" 
+    ]
+}
+
+# Extract the newly generated webhook endpoint string as {{createMaskingPipeline.response.body.pipeline.sourceEndpoint}}
+
+# -------------------------------------------------------
+# FIRE THE TRIGGER (No Token Required - Uses Unique URL)
+# -------------------------------------------------------
+
+### Trigger the Webhook (Simulating a 3rd party sending you data)
+POST https://webhook-app-296082681940.us-central1.run.app/api/webhooks/{{createMaskingPipeline.response.body.pipeline.sourceEndpoint}}
+Content-Type: application/json
+
+{
+  "event": "user_signup",
+  "userId": "998877",
+  "email": "topsecret@gmail.com",
+  "password": "mySuperSecretPassword!",
+  "public_profile": {
+    "username": "cool_tester",
+    "theme": "dark"
+  }
+}

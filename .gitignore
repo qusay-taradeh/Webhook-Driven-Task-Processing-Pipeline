@@ -2,3 +2,5 @@
 server.log
 /dist
 .env
+skills-lock.json
+.agents/skills/neon-postgres/SKILL.md

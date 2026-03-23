@@ -84,3 +84,31 @@ npm install bullmq ioredis
 docker run -d -p 6379:6379 redis
 
 ########################
+
+Go to Neon.tech and sign in (using GitHub is the fastest).
+
+Click Create a Project. Name it something like webhook-pipeline and click Create.
+
+You will immediately be dropped into your dashboard. Look for the Connection Details box.
+
+Copy the connection string and paste it in GDP DATABASE_URL secret
+
+Connect your app to Neon with a single command:
+
+npx neonctl@latest init
+
+create database webhook-db
+
+For Redis
+
+Go to Upstash.com and sign in.
+
+Click Create Database under the Redis section. Name it webhook-redis, pick a region, and click Create.
+
+Scroll down slightly on the database page and copy the connection string.
+
+deploy and test
+
+test locally by following command
+
+docker compose up --build

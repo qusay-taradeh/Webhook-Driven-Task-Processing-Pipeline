@@ -29,7 +29,7 @@ async function main() {
   const app = express();
 
   // for GCP
-  const PORT = Number(process.env.PORT) || 8080;
+  const PORT = apiConfig.connectionPort;
 
   // To send JSON responses
   app.use(express.json());

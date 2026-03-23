@@ -42,3 +42,10 @@ jobs:
 
       - name: Build the Docker image and push it to Google Artifact Registry
         run: gcloud builds submit --tag us-central1-docker.pkg.dev/webhook-driven-task/webhook-ar-repo/webhook-app:latest .
+        
+      - name: Run the Migrations
+        run: npm run db:migrate
+
+      - name: Deploy to Cloud Run
+        run: gcloud run deploy webhook-app --image us-central1-docker.pkg.dev/webhook-driven-task/webhook-ar-repo/webhook-app:latest --region us-central1 --allow-unauthenticated --project webhook-driven-task --max-instances=4
+  

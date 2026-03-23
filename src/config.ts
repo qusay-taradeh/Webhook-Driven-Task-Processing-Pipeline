@@ -20,11 +20,15 @@ type APIConfig = {
   platform: string;
   secretKey: string;
   dbURL: string;
+  redisURL: string;
+  connectionPort: number;
 };
 
 const dbURLEnv = process.env.DATABASE_URL || "";
+const redisURLEnv = process.env.REDIS_URL || "";
 const platformEnv = process.env.PLATFORM || "dev";
 const secretKeyEnv = process.env.SECRET || "";
+const portEnv = Number(process.env.PORT) || 8080;
 
 export const apiConfig: APIConfig = {
   fileserverHits: 0,
@@ -32,4 +36,6 @@ export const apiConfig: APIConfig = {
   platform: platformEnv,
   secretKey: secretKeyEnv,
   dbURL: dbURLEnv,
+  redisURL: redisURLEnv,
+  connectionPort: portEnv,
 };
